@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+
+  chatbot:
+    build:
+      context: ./Chatbot-UI
+      dockerfile: Dockerfile
+    image: dusky88/chatbot:latest
+    container_name: chatbot
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - chatbot-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  chatbot-net:
+    driver: bridge
