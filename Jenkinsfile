@@ -1,12 +1,12 @@
 pipeline {
     agent none
-    
+
     environment {
         IMAGE_NAME = "dusky88/chatbot"
         IMAGE_TAG  = "${BUILD_NUMBER}"
         APP_DIR    = "Chatbot-UI"
     }
-    
+
     stages {
         stage('Build & Test') {
             agent {
@@ -39,7 +39,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Docker Build & Deploy') {
             agent any
             stages {
@@ -59,14 +59,14 @@ pipeline {
                         }
                     }
                 }
-                
+
                 stage('Push to Docker Hub') {
                     steps {
                         sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
                         sh "docker push ${IMAGE_NAME}:latest"
                     }
                 }
-                
+
                 stage('Deploy to Container') {
                     steps {
                         sh 'docker stop chatbot || true'
@@ -84,7 +84,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo "Pipeline SUCCESS - image ${IMAGE_NAME}:${IMAGE_TAG} deployed"
@@ -92,5 +92,5 @@ pipeline {
         failure {
             echo "Pipeline FAILED"
         }
-        
+    }
 }
