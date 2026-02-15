@@ -25,7 +25,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 dir("${APP_DIR}") {
-                    sh 'npm ci'
+                    sh 'npm ci --cache /tmp/npm-cache'
                 }
             }
         }
