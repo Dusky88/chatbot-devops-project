@@ -1,8 +1,9 @@
 pipeline {
-    agent any
-
-    tools {
-        nodejs 'node18'
+    agent {
+        docker {
+            image 'node:18-alpine'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
     }
 
     environment {
@@ -38,6 +39,7 @@ pipeline {
         }
 
         stage('Docker Build') {
+            agent any
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
@@ -49,6 +51,7 @@ pipeline {
         }
 
         stage('Push to Docker Hub') {
+            agent any
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
@@ -60,6 +63,7 @@ pipeline {
         }
 
         stage('Deploy to Container') {
+            agent any
             steps {
                 sh 'docker stop chatbot || true'
                 sh 'docker rm chatbot || true'
@@ -83,7 +87,6 @@ pipeline {
             echo "Pipeline FAILED at stage: ${currentBuild.result}"
         }
         always {
-            sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
             cleanWs()
         }
     }
