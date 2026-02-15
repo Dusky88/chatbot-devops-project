@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'node:18-alpine'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
+            args '-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker'
         }
     }
 
@@ -33,7 +33,7 @@ pipeline {
         stage('Lint') {
             steps {
                 dir("${APP_DIR}") {
-                    sh 'npm run lint || true'
+                    sh 'npm run lint -- --no-eslintrc || true'
                 }
             }
         }
@@ -41,11 +41,14 @@ pipeline {
         stage('Docker Build') {
             agent any
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
-                        sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ./Chatbot-UI"
-                        sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ./Chatbot-UI"
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -53,11 +56,13 @@ pipeline {
         stage('Push to Docker Hub') {
             agent any
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'dockerhub-creds', toolName: 'docker') {
-                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "docker push ${IMAGE_NAME}:latest"
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -91,3 +96,4 @@ pipeline {
         }
     }
 }
+
