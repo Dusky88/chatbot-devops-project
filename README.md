@@ -402,7 +402,7 @@ This project is licensed under the MIT License.
 ![Chatbot UI](screenshots/Promotheus.png)
 
 ### Jenkins Pipeline
-![Chatbot UI](screenshots/app.png)
+![Chatbot UI](screenshots/Jenkins.png)
 
 ---
 
