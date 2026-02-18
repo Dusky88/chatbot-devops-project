@@ -1,0 +1,74 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  # Common configuration for all VMs
+  config.vm.box = "ubuntu/jammy64"  # Ubuntu 22.04 LTS
+  
+  # Master Node (linuxserver)
+  config.vm.define "master" do |master|
+    master.vm.hostname = "linuxserver"
+    master.vm.network "private_network", ip: "192.168.56.10"
+    master.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)"
+    
+    master.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-master"
+      vb.memory = "8192"
+      vb.cpus = 4
+    end
+    
+    master.vm.provision "shell", path: "scripts/install-k8s.sh"
+    master.vm.provision "shell", inline: <<-SHELL
+      # Initialize Kubernetes cluster
+      sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=192.168.56.10
+      
+      # Setup kubectl for vagrant user
+      mkdir -p /home/vagrant/.kube
+      sudo cp /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+      sudo chown vagrant:vagrant /home/vagrant/.kube/config
+      
+      # Install Flannel CNI
+      kubectl --kubeconfig=/home/vagrant/.kube/config apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+      
+      # Save join command for workers
+      kubeadm token create --print-join-command > /vagrant/join-command.sh
+      chmod +x /vagrant/join-command.sh
+    SHELL
+  end
+  
+  # Worker Node 1 (aserver)
+  config.vm.define "worker1" do |worker1|
+    worker1.vm.hostname = "aserver"
+    worker1.vm.network "private_network", ip: "192.168.56.11"
+    
+    worker1.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-worker1"
+      vb.memory = "4096"
+      vb.cpus = 2
+    end
+    
+    worker1.vm.provision "shell", path: "scripts/install-k8s.sh"
+    worker1.vm.provision "shell", inline: <<-SHELL
+      # Join the cluster
+      bash /vagrant/join-command.sh
+    SHELL
+  end
+  
+  # Worker Node 2 (testserver)
+  config.vm.define "worker2" do |worker2|
+    worker2.vm.hostname = "testserver"
+    worker2.vm.network "private_network", ip: "192.168.56.12"
+    
+    worker2.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-worker2"
+      vb.memory = "4096"
+      vb.cpus = 2
+    end
+    
+    worker2.vm.provision "shell", path: "scripts/install-k8s.sh"
+    worker2.vm.provision "shell", inline: <<-SHELL
+      # Join the cluster
+      bash /vagrant/join-command.sh
+    SHELL
+  end
+end
