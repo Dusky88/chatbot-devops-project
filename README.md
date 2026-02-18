@@ -393,13 +393,16 @@ This project is licensed under the MIT License.
 ## 📸 Screenshots
 
 ### Application Running
-![Chatbot UI](https://via.placeholder.com/800x400?text=Chatbot+UI+Screenshot)
+![Chatbot UI](screenshots/Chatbot.png)
 
 ### Grafana Dashboard
-![Grafana](https://via.placeholder.com/800x400?text=Grafana+Dashboard)
+![Chatbot UI](screenshots/Grafana.png)
+
+### Promotheus State
+![Chatbot UI](screenshots/Promotheus.png)
 
 ### Jenkins Pipeline
-![Jenkins](https://via.placeholder.com/800x400?text=Jenkins+Pipeline)
+![Chatbot UI](screenshots/app.png)
 
 ---
 
